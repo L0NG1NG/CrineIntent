@@ -1,6 +1,7 @@
 package com.longing.criminalintent;
 
 import android.os.Bundle
+import android.text.format.DateFormat
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,6 +12,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+
 
 class CrimeListFragment : Fragment() {
     private lateinit var crimeRecyclerView: RecyclerView
@@ -41,22 +43,27 @@ class CrimeListFragment : Fragment() {
         crimeRecyclerView.adapter = adapter
     }
 
+    /**
+     * https://www.unicode.org/reports/tr35/tr35-dates.html#Date_Format_Patterns
+     */
     private inner class CrimeHolder(view: View) : RecyclerView.ViewHolder(view),
         View.OnClickListener {
         private lateinit var crime: Crime
-
         private val titleTextView: TextView = view.findViewById(R.id.crime_title)
         private val dateTextView: TextView = view.findViewById(R.id.crime_date)
         private val solvedImageView: ImageView = view.findViewById(R.id.crime_solved)
 
+
         init {
             itemView.setOnClickListener(this)
+
         }
 
         fun bind(crime: Crime) {
             this.crime = crime
             titleTextView.text = this.crime.title
-            dateTextView.text = this.crime.date.toString()
+            val date = DateFormat.format("EEE,MMM dd,yyyy", crime.date)
+            dateTextView.text = date
             solvedImageView.visibility = if (crime.isSolved) View.VISIBLE
             else View.GONE
 
