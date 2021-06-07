@@ -16,7 +16,7 @@ import androidx.lifecycle.ViewModelProvider
 import java.util.*
 
 const val TAG = "CrimeFragment"
-private const val ARG_CRIME_ID = "crime_id"
+const val ARG_CRIME_ID = "crime_id"
 
 class CrimeFragment : Fragment() {
 
@@ -52,7 +52,6 @@ class CrimeFragment : Fragment() {
         }
 
         solvedCheckBox = view.findViewById(R.id.crime_solved)
-        Log.e(TAG, "onCreateView: --->")
         return view
     }
 
@@ -108,17 +107,6 @@ class CrimeFragment : Fragment() {
         }
     }
 
-    companion object {
-        fun newInstance(crimeId: UUID): CrimeFragment {
-            val args = Bundle().apply {
-                putSerializable(ARG_CRIME_ID, crimeId)
-
-            }
-            return CrimeFragment().apply {
-                arguments = args
-            }
-        }
-    }
 
 
 }
