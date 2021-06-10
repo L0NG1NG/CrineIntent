@@ -3,6 +3,7 @@ package com.longing.criminalintent
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -16,6 +17,7 @@ import java.util.*
 const val TAG = "CrimeFragment"
 private const val ARG_CRIME_ID = "crime_id"
 private const val DIALOG_DATE = "DialogDate"
+private const val DIALOG_TIME = "DialogTime"
 
 
 class CrimeFragment : Fragment() {
@@ -24,6 +26,7 @@ class CrimeFragment : Fragment() {
     private lateinit var titleField: EditText
     private lateinit var dateButton: Button
     private lateinit var solvedCheckBox: CheckBox
+    private lateinit var timeButton: Button
 
     private val crimeDetailViewModel: CrimeDetailViewModel by lazy {
         ViewModelProvider(this).get(CrimeDetailViewModel::class.java)
@@ -47,19 +50,7 @@ class CrimeFragment : Fragment() {
         titleField = view.findViewById(R.id.crime_title)
         dateButton = view.findViewById(R.id.crime_date)
         solvedCheckBox = view.findViewById(R.id.crime_solved)
-
-        //setTargetFragment被废弃了,试试这个
-        parentFragmentManager.setFragmentResultListener(
-            REQUEST_DATE,
-            viewLifecycleOwner
-        ) { requestKey: String, result: Bundle ->
-            if (requestKey == REQUEST_DATE) {
-                val date: Date = DatePickerFragment.getResultDate(result)
-                crime.date = date
-                updateUI()
-
-            }
-        }
+        timeButton = view.findViewById(R.id.pick_crime_time)
 
         return view
     }
@@ -106,7 +97,37 @@ class CrimeFragment : Fragment() {
 
         }
 
+        timeButton.setOnClickListener {
+            TimePickerFragment.newInstance(crime.date).apply {
+                show(this@CrimeFragment.parentFragmentManager, DIALOG_TIME)
+            }
+        }
+
+        //setTargetFragment被废弃了,试试这个
+        parentFragmentManager.setFragmentResultListener(
+            REQUEST_DATE,
+            viewLifecycleOwner
+        ) { _, result: Bundle ->
+            val date: Date = DatePickerFragment.getResultDate(result)
+            crime.date = date
+            updateUI()
+
+        }
+
+        //再写一个
+        parentFragmentManager.setFragmentResultListener(
+            REQUEST_TIME,
+            viewLifecycleOwner
+        ) { _, result: Bundle ->
+            val date: Date = TimePickerFragment.getResultTime(result)
+            crime.date = date
+            updateUI()
+
+        }
+
+
     }
+
 
     override fun onStop() {
         super.onStop()
