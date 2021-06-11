@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.view.*
+import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
@@ -23,6 +24,8 @@ class CrimeListFragment : Fragment() {
     private var callbacks: Callbacks? = null
 
     private lateinit var crimeRecyclerView: RecyclerView
+    private lateinit var addCrime: Button
+    private lateinit var emptyLayout: View
     private var adapter: CrimeAdapter? = CrimeAdapter(emptyList())
 
     private val crimeListViewModel: CrimeListViewModel by lazy {
@@ -50,6 +53,12 @@ class CrimeListFragment : Fragment() {
         crimeRecyclerView.layoutManager = LinearLayoutManager(context)
         crimeRecyclerView.adapter = adapter
 
+        emptyLayout = view.findViewById(R.id.empty_layout)
+
+        addCrime = view.findViewById(R.id.add_crime_button)
+        addCrime.setOnClickListener {
+            addCrime()
+        }
         return view
     }
 
@@ -78,19 +87,25 @@ class CrimeListFragment : Fragment() {
 
         return when (item.itemId) {
             R.id.new_crime -> {
-                val crime = Crime()
-                crimeListViewModel.addCrime(crime)
-                callbacks?.onCrimeSelected(crime.id)
+                addCrime()
                 true
             }
             else -> super.onOptionsItemSelected(item)
         }
     }
 
+    private fun addCrime() {
+        val crime = Crime()
+        crimeListViewModel.addCrime(crime)
+        callbacks?.onCrimeSelected(crime.id)
+    }
+
     private fun updateUI(crimes: List<Crime>) {
+        emptyLayout.visibility = if (crimes.isEmpty()) View.VISIBLE else View.GONE
 
         adapter = CrimeAdapter(crimes)
         crimeRecyclerView.adapter = adapter
+
     }
 
     private inner class CrimeHolder(view: View) : RecyclerView.ViewHolder(view),
