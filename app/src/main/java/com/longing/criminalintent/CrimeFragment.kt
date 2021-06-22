@@ -14,6 +14,7 @@ import android.text.format.DateFormat
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewTreeObserver
 import android.widget.*
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultCallback
@@ -28,6 +29,7 @@ import java.io.File
 import java.util.*
 
 const val TAG = "CrimeFragment"
+private const val DIALOG_PHOTO = "DialogPhoto"
 private const val ARG_CRIME_ID = "crime_id"
 private const val DIALOG_DATE = "DialogDate"
 private const val DATE_FORMAT = "EEE,MMM,dd"
@@ -100,8 +102,10 @@ class CrimeFragment : Fragment() {
                 when {
                     it.resultCode != Activity.RESULT_OK -> return@registerForActivityResult
                     it != null -> {
-                        requireActivity().revokeUriPermission(photoUri,
-                            Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+                        requireActivity().revokeUriPermission(
+                            photoUri,
+                            Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                        )
                         updatePhotoView()
 
                     }
@@ -253,6 +257,27 @@ class CrimeFragment : Fragment() {
 
         }
 
+        photoView.setOnClickListener {
+            if (photoFile.exists()) {
+                SuspectPictureFragment.newInstance(photoFile)
+                    .show(parentFragmentManager, DIALOG_PHOTO)
+            }
+        }
+
+        val glListener = object : ViewTreeObserver.OnGlobalLayoutListener {
+            override fun onGlobalLayout() {
+                if (this@CrimeFragment::photoFile.isInitialized) {
+                    if (photoView.width > 0 && photoView.height > 0) {
+                        updatePhotoView()
+                        photoView.viewTreeObserver.removeOnGlobalLayoutListener(this)
+                    }
+                }
+            }
+        }
+
+        photoView.viewTreeObserver.addOnGlobalLayoutListener(glListener)
+
+
     }
 
     override fun onStop() {
@@ -263,8 +288,10 @@ class CrimeFragment : Fragment() {
 
     override fun onDetach() {
         super.onDetach()
-        requireActivity().revokeUriPermission(photoUri,
-            Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+        requireActivity().revokeUriPermission(
+            photoUri,
+            Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+        )
     }
 
     override fun onDestroy() {
@@ -289,7 +316,7 @@ class CrimeFragment : Fragment() {
 
     private fun updatePhotoView() {
         if (photoFile.exists()) {
-            val bitmap = getScaledBitmap(photoFile.path, requireContext())
+            val bitmap = getScaledBitmap(photoFile.path, photoView.width, photoView.height)
             photoView.setImageBitmap(bitmap)
 
         } else {
