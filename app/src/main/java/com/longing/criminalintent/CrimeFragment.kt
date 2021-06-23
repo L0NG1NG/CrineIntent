@@ -271,7 +271,9 @@ class CrimeFragment : Fragment() {
 
     private fun updateUI() {
         titleField.setText(crime.title)
-        dateButton.text = crime.date.toString()
+        val pattern = DateFormat.getBestDateTimePattern(Locale.getDefault(), "yyyyMMdd EEE")
+        dateButton.text = DateFormat.format(pattern, crime.date)
+
         //   solvedCheckBox.isChecked = crime.isSolved
         solvedCheckBox.apply {
             isChecked = crime.isSolved
