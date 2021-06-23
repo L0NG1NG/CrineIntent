@@ -11,6 +11,7 @@ import android.provider.MediaStore
 import android.text.Editable
 import android.text.TextWatcher
 import android.text.format.DateFormat
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -264,18 +265,18 @@ class CrimeFragment : Fragment() {
             }
         }
 
-        val glListener = object : ViewTreeObserver.OnGlobalLayoutListener {
+
+        photoView.viewTreeObserver.addOnGlobalLayoutListener(object :
+            ViewTreeObserver.OnGlobalLayoutListener {
             override fun onGlobalLayout() {
                 if (this@CrimeFragment::photoFile.isInitialized) {
-                    if (photoView.width > 0 && photoView.height > 0) {
-                        updatePhotoView()
-                        photoView.viewTreeObserver.removeOnGlobalLayoutListener(this)
-                    }
+                    updatePhotoView()
+                    photoView.viewTreeObserver.removeOnGlobalLayoutListener(this)
+
                 }
             }
-        }
+        })
 
-        photoView.viewTreeObserver.addOnGlobalLayoutListener(glListener)
 
 
     }
