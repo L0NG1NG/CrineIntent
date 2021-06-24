@@ -96,8 +96,10 @@ class CrimeFragment : Fragment() {
                 when {
                     it.resultCode != Activity.RESULT_OK -> return@registerForActivityResult
                     it != null -> {
-                        requireActivity().revokeUriPermission(photoUri,
-                            Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+                        requireActivity().revokeUriPermission(
+                            photoUri,
+                            Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                        )
                         updatePhotoView()
 
                     }
@@ -259,8 +261,10 @@ class CrimeFragment : Fragment() {
 
     override fun onDetach() {
         super.onDetach()
-        requireActivity().revokeUriPermission(photoUri,
-            Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+        requireActivity().revokeUriPermission(
+            photoUri,
+            Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+        )
     }
 
     override fun onDestroy() {
@@ -287,9 +291,15 @@ class CrimeFragment : Fragment() {
         if (photoFile.exists()) {
             val bitmap = getScaledBitmap(photoFile.path, requireContext())
             photoView.setImageBitmap(bitmap)
+            photoView.contentDescription = getString(
+                R.string.crime_photo_image_description
+            )
 
         } else {
             photoView.setImageBitmap(null)
+            photoView.contentDescription = getString(
+                R.string.crime_photo_no_image_description
+            )
         }
     }
 
