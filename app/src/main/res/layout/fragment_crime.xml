@@ -56,11 +56,18 @@
 
     </LinearLayout>
 
-
+    
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/crime_details_label" />
+
+    <TextView
+        android:id="@+id/crime_date_label"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:labelFor="@+id/crime_date"
+        android:text="Date" />
 
     <Button
         android:id="@+id/crime_date"

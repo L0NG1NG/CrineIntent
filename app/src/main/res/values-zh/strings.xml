@@ -21,4 +21,6 @@
     <string name="crime_photo_button_description">陋习现场拍照按钮</string>
     <string name="crime_photo_no_image_description">陋习现场照片(未拍照)</string>
     <string name="crime_photo_image_description">陋习现场照片(已拍照)</string>
+    <string name="crime_solved_image_description">嫌疑人已被抓捕</string>
+    <string name="crime_take_photo_complete">已拍摄陋习照片</string>
 </resources>

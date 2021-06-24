@@ -94,14 +94,16 @@ class CrimeFragment : Fragment() {
         takePhotoResult =
             registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
                 when {
-                    it.resultCode != Activity.RESULT_OK -> return@registerForActivityResult
+                    it.resultCode != Activity.RESULT_OK -> {
+                        return@registerForActivityResult
+                    }
                     it != null -> {
                         requireActivity().revokeUriPermission(
                             photoUri,
                             Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                         )
                         updatePhotoView()
-
+                        photoView.announceForAccessibility(getString(R.string.crime_take_photo_complete))
                     }
                 }
             }
