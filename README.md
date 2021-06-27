@@ -1,6 +1,6 @@
 # CrineIntent
 
-###挑战练习：使用Navigation组件与实现高效的RecyclerView刷新
+### 挑战练习：使用Navigation组件与实现高效的RecyclerView刷新
 
 在使用Navigation传递crimeId的时候没有使用推荐的safeArg的方式，简单起见直接使用bundle。
 
