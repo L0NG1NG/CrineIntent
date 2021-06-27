@@ -26,11 +26,11 @@ class CrimeRepository private constructor(context: Context) {
     fun getCrime(id: UUID): LiveData<Crime?> = crimeDao.getCrime(id)
 
     fun updateCrime(crime: Crime) {
-        dateBase.crimeDAO().update(crime)
+        executor.execute { dateBase.crimeDAO().update(crime) }
     }
 
     fun insertCrime(crime: Crime) {
-        dateBase.crimeDAO().insert(crime)
+        executor.execute { dateBase.crimeDAO().insert(crime) }
     }
 
     companion object {
