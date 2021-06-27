@@ -16,4 +16,6 @@
     <string name="crime_report_no_suspect">there is no suspect</string>
     <string name="crime_report_subject">CriminalIntent Crime Report</string>
     <string name="send_report">Send crime report via</string>
+    <string name="call_suspect">call</string>
+    <string name="cannot_read_contacts_toast">No permission to read contacts</string>
 </resources>

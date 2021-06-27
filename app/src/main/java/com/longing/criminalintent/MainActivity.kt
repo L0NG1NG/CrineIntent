@@ -1,7 +1,7 @@
 package com.longing.criminalintent
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
 import java.util.*
 
 
@@ -29,6 +29,5 @@ class MainActivity : AppCompatActivity(), CrimeListFragment.Callbacks {
             .addToBackStack(null)
             .commit()
     }
-
 
 }

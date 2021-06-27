@@ -1,5 +1,6 @@
 package com.longing.criminalintent
 
+import android.Manifest
 import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -10,26 +11,25 @@ import android.provider.ContactsContract
 import android.text.Editable
 import android.text.TextWatcher
 import android.text.format.DateFormat
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.EditText
-import androidx.activity.result.ActivityResult
-import androidx.activity.result.ActivityResultCallback
+import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import java.util.*
 
-const val TAG = "CrimeFragment"
+private const val TAG = "CrimeFragment"
 private const val ARG_CRIME_ID = "crime_id"
 private const val DIALOG_DATE = "DialogDate"
 private const val DATE_FORMAT = "EEE,MMM,dd"
-private const val REQUEST_CONTACT = 1
 
 class CrimeFragment : Fragment() {
 
@@ -39,8 +39,9 @@ class CrimeFragment : Fragment() {
     private lateinit var solvedCheckBox: CheckBox
     private lateinit var reportButton: Button
     private lateinit var suspectButton: Button
+    private lateinit var callSuspectButton: Button
     private lateinit var activityResult: ActivityResultLauncher<Intent>
-
+    private lateinit var permissionRegister: ActivityResultLauncher<String>
     private val crimeDetailViewModel: CrimeDetailViewModel by lazy {
         ViewModelProvider(this).get(CrimeDetailViewModel::class.java)
 
@@ -52,43 +53,56 @@ class CrimeFragment : Fragment() {
         val crimeId: UUID = arguments?.getSerializable(ARG_CRIME_ID) as UUID
         crimeDetailViewModel.loadCrime(crimeId)
 
-        //这样写好像还更复杂
+        //activityResult for choose suspect
         activityResult =
             registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
                 when {
                     it.resultCode != Activity.RESULT_OK -> return@registerForActivityResult
                     it != null -> {
                         val contractUri: Uri? = it.data?.data
-                        contractUri?.let { uri ->
+                        if (contractUri != null) {
                             val queryFields = arrayOf(ContactsContract.Contacts.DISPLAY_NAME)
                             val cursor = requireActivity().contentResolver.query(
-                                uri,
+                                contractUri,
                                 queryFields,
                                 null,
                                 null,
                                 null
 
                             )
-
-                            cursor?.use { cursor ->
-                                if (cursor.count == 0) {
+                            cursor?.use { c ->
+                                if (c.count == 0) {
                                     return@registerForActivityResult
                                 }
-                                cursor.moveToFirst()
-                                val suspect = cursor.getString(0)
+                                c.moveToFirst()
+                                val suspect = c.getString(0)
                                 crime.suspect = suspect
                                 crimeDetailViewModel.saveCrime(crime)
                                 suspectButton.text = crime.suspect
-
                             }
                         }
-
 
                     }
 
                 }
 
             }
+
+        permissionRegister = registerForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) {
+            if (it) {
+                queryContacts()
+            } else {
+                Toast.makeText(
+                    requireContext(),
+                    R.string.cannot_read_contacts_toast,
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+
+        }
+
 
     }
 
@@ -103,8 +117,9 @@ class CrimeFragment : Fragment() {
         solvedCheckBox = view.findViewById(R.id.crime_solved)
         reportButton = view.findViewById(R.id.crime_report)
         suspectButton = view.findViewById(R.id.crime_suspect)
+        callSuspectButton = view.findViewById(R.id.call_suspect)
 
-        //setTargetFragment被废弃了,试试这个
+        //试试新的 来实现fragment间传递数据
         parentFragmentManager.setFragmentResultListener(
             REQUEST_DATE,
             viewLifecycleOwner
@@ -182,12 +197,65 @@ class CrimeFragment : Fragment() {
                 activityResult.launch(pickContactIntent)
 
             }
-            
+
             val packageManager: PackageManager = requireActivity().packageManager
             val resolvedActivity: ResolveInfo? =
                 packageManager.resolveActivity(pickContactIntent, PackageManager.MATCH_DEFAULT_ONLY)
             if (resolvedActivity == null) {
                 isEnabled = false
+            }
+        }
+
+        callSuspectButton.setOnClickListener {
+            if (!haveContactsPermission()) {
+                permissionRegister.launch(Manifest.permission.READ_CONTACTS)
+            } else {
+                queryContacts()
+            }
+
+
+        }
+
+
+    }
+
+    private fun queryContacts() {
+        val contactCursor = requireActivity().contentResolver.query(
+            ContactsContract.Contacts.CONTENT_URI,
+            arrayOf(ContactsContract.Contacts._ID),
+            "${ContactsContract.Contacts.DISPLAY_NAME}=?",
+            arrayOf(crime.suspect),
+            null
+        )
+
+        contactCursor?.use { cc ->
+            if (cc.count == 0) {
+                return
+            }
+            cc.moveToFirst()
+            val contactsId =
+                cc.getInt(cc.getColumnIndex(ContactsContract.Contacts._ID))
+            val phoneCursor = this.requireContext().contentResolver.query(
+                ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                arrayOf(ContactsContract.CommonDataKinds.Phone.NUMBER),
+                "${ContactsContract.CommonDataKinds.Phone.CONTACT_ID}=?",
+                arrayOf(contactsId.toString()),
+                null
+            )
+
+            phoneCursor?.use { pc ->
+                if (pc.count == 0) {
+                    return
+                }
+                pc.moveToFirst()
+                val number = pc.getString(
+                    pc.getColumnIndex(
+                        ContactsContract.CommonDataKinds.Phone.NUMBER
+                    )
+                )
+                val numberUri = Uri.parse("tel:$number")
+                startActivity(Intent(Intent.ACTION_DIAL, numberUri))
+
             }
         }
 
@@ -207,6 +275,8 @@ class CrimeFragment : Fragment() {
             isChecked = crime.isSolved
             jumpDrawablesToCurrentState()
         }
+        suspectButton.text = crime.suspect
+        callSuspectButton.isEnabled = crime.suspect.isNotEmpty()
     }
 
     private fun getCrimeReport(): String {
@@ -216,7 +286,7 @@ class CrimeFragment : Fragment() {
             getString(R.string.crime_report_unsolved)
         }
         val dateString = DateFormat.format(DATE_FORMAT, crime.date).toString()
-        var suspect = if (crime.suspect.isBlank()) {
+        val suspect = if (crime.suspect.isBlank()) {
             getString(R.string.crime_report_no_suspect)
         } else {
             getString(R.string.crime_report_no_suspect)
@@ -226,6 +296,15 @@ class CrimeFragment : Fragment() {
             R.string.crime_report,
             crime.title, dateString, solvedString, suspect
         )
+
+    }
+
+    private fun haveContactsPermission(): Boolean {
+        val status = ContextCompat.checkSelfPermission(
+            requireContext(),
+            Manifest.permission.READ_CONTACTS
+        )
+        return status == PackageManager.PERMISSION_GRANTED
 
     }
 
